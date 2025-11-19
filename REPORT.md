@@ -12,6 +12,7 @@ I'm building a breathing exercise app, and I need to write a lot of content for 
 - Keeping it acurate 
 - Want content to match my app's calming theme
 
+
 ### My Solution
 Built an AI agent that:
 - Scrapes articles I choose and stores them in a vector database
