@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Ingests breathing exercise content from URLs into a ChromaDB collection."""
+
+
+"""Ingests breathing exercise content from local PDF files into a ChromaDB collection."""
 
 from __future__ import annotations
 
@@ -11,11 +13,11 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from scraper import scrape_all_urls
+from scraper import extract_pdf_content_from_file
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_URL_FILE = SCRIPT_DIR / "papers" / "url.txt"
+DEFAULT_PAPERS_DIR = SCRIPT_DIR / "papers"
 DEFAULT_VECTOR_STORE_DIR = SCRIPT_DIR / "vector_store"
 DEFAULT_COLLECTION_NAME = "breathing_exercises"
 CHUNK_SIZE = 500
@@ -32,11 +34,11 @@ def chunk_text(text: str) -> Iterable[str]:
     return splitter.split_text(text)
 
 
-def ingest_scraped_content(scraped_data: dict) -> tuple[list[str], list[dict], list[str]]:
-    """Process scraped content by chunking it and creating metadata.
+def process_pdf_file(pdf_path: Path) -> tuple[list[str], list[dict], list[str]]:
+    """Process a PDF file by extracting content, chunking it, and creating metadata.
     
     Args:
-        scraped_data: Dictionary with 'url', 'title', 'content', 'status', 'error'
+        pdf_path: Path to the PDF file
         
     Returns:
         Tuple of (documents, metadatas, ids)
@@ -45,41 +47,43 @@ def ingest_scraped_content(scraped_data: dict) -> tuple[list[str], list[dict], l
     metadatas: list[dict] = []
     ids: list[str] = []
 
-    # Skip if scraping failed or no content
-    if scraped_data['status'] != 'success' or not scraped_data['content'].strip():
+    try:
+        title, content = extract_pdf_content_from_file(pdf_path)
+    except Exception as e:
+        # Return empty lists if extraction fails
         return documents, metadatas, ids
     
-    url = scraped_data['url']
-    title = scraped_data['title']
-    content = scraped_data['content']
+    # Skip if no content extracted
+    if not content.strip():
+        return documents, metadatas, ids
     
-    # Create a safe ID from the URL
-    url_id = url.replace('https://', '').replace('http://', '').replace('/', '-').replace('.', '-')
+    # Create a safe ID from the filename
+    file_id = pdf_path.stem.replace(' ', '-').replace('_', '-').replace('.', '-')
     # Limit length
-    url_id = url_id[:50]
+    file_id = file_id[:50]
     
     chunks = list(chunk_text(content))
     
     for chunk_index, chunk in enumerate(chunks):
         documents.append(chunk)
         metadatas.append({
-            "url": url,
+            "source": str(pdf_path.name),
             "title": title,
             "chunk_index": chunk_index,
         })
-        ids.append(f"{url_id}-c{chunk_index}")
+        ids.append(f"{file_id}-c{chunk_index}")
 
     return documents, metadatas, ids
 
 
 def parse_args() -> ArgumentParser:
     """Parse command line arguments."""
-    parser = ArgumentParser(description="Ingest breathing exercise content into ChromaDB.")
+    parser = ArgumentParser(description="Ingest breathing exercise content from PDF files into ChromaDB.")
     parser.add_argument(
-        "--url-file",
+        "--papers-dir",
         type=Path,
-        default=DEFAULT_URL_FILE,
-        help="File containing URLs to scrape (one per line).",
+        default=DEFAULT_PAPERS_DIR,
+        help="Directory containing PDF files to ingest.",
     )
     parser.add_argument(
         "--persist-dir",
@@ -100,31 +104,29 @@ def main() -> None:
     parser = parse_args()
     args = parser.parse_args()
 
-    url_file = args.url_file
+    papers_dir = args.papers_dir
     persist_dir = args.persist_dir
     collection_name = args.collection
 
     print(f"{'='*60}")
     print(f"Breathing Exercise Ingestion Pipeline")
     print(f"{'='*60}")
-    print(f"URL file: {url_file}")
+    print(f"PDF directory: {papers_dir}")
     print(f"Vector store: {persist_dir}")
     print(f"Collection: {collection_name}")
     print(f"{'='*60}\n")
 
-    # Step 1: Scrape all URLs
-    print("Step 1: Scraping URLs...")
-    scraped_results = scrape_all_urls(url_file, timeout=15)
+    # Step 1: Find all PDF files
+    print("Step 1: Finding PDF files...")
+    if not papers_dir.exists():
+        raise ValueError(f"PDF directory not found: {papers_dir}")
     
-    if not scraped_results:
-        raise ValueError(f"No URLs scraped from {url_file}")
+    pdf_files = list(papers_dir.glob("*.pdf"))
     
-    successful_scrapes = [r for r in scraped_results if r['status'] == 'success']
+    if not pdf_files:
+        raise ValueError(f"No PDF files found in {papers_dir}")
     
-    if not successful_scrapes:
-        raise ValueError("All URL scraping attempts failed. Check the URLs and your internet connection.")
-    
-    print(f"\nSuccessfully scraped {len(successful_scrapes)} out of {len(scraped_results)} URLs.\n")
+    print(f"Found {len(pdf_files)} PDF file(s).\n")
 
     # Step 2: Initialize ChromaDB
     print("Step 2: Initializing ChromaDB...")
@@ -144,22 +146,25 @@ def main() -> None:
     # Step 3: Process and ingest content
     print("\nStep 3: Processing and ingesting content...")
     total_chunks = 0
+    successful_files = 0
 
-    for scraped_data in successful_scrapes:
-        documents, metadatas, ids = ingest_scraped_content(scraped_data)
+    for pdf_path in pdf_files:
+        print(f"Processing: {pdf_path.name}")
+        documents, metadatas, ids = process_pdf_file(pdf_path)
 
         if not documents:
-            print(f"Skipping {scraped_data['url']}: no content to ingest.")
+            print(f"  ✗ Skipping {pdf_path.name}: no content extracted.")
             continue
 
         collection.add(ids=ids, documents=documents, metadatas=metadatas)
         total_chunks += len(documents)
-        print(f"  ✓ Ingested {len(documents)} chunks from: {scraped_data['title'][:60]}")
+        successful_files += 1
+        print(f"  ✓ Ingested {len(documents)} chunks from: {pdf_path.name}")
 
     print(f"\n{'='*60}")
     print(f"Ingestion Complete!")
     print(f"{'='*60}")
-    print(f"URLs processed: {len(successful_scrapes)}")
+    print(f"PDF files processed: {successful_files} out of {len(pdf_files)}")
     print(f"Total chunks: {total_chunks}")
     print(f"Collection: '{collection_name}'")
     print(f"Vector store: {persist_dir}")

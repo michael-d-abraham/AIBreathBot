@@ -4,7 +4,7 @@ from typing import List
 
 from smolagents import Tool
 
-from .vector_store import ChromaRetriever
+from .vector_store import ChromaRetriever, StyleRetriever
 
 
 class RetrieveDocumentsTool(Tool):
@@ -46,3 +46,39 @@ class RetrieveDocumentsTool(Tool):
             content_parts.append(f"[Source {i}: {source}]\n{doc_text}")
         
         return "\n\n---\n\n".join(content_parts)
+
+
+class RetrieveStyleTool(Tool):
+    """Tool for retrieving style examples from the Breath app voice corpus."""
+    
+    name = "retrieve_style"
+    description = (
+        "Retrieve style examples from the Breath app voice corpus to guide tone and phrasing. "
+        "Use this to find examples of how to write in the Breath app voice when generating content."
+    )
+    inputs = {
+        "query": {
+            "type": "string",
+            "description": "Description of the type of style example needed (e.g., 'introduction', 'closing', 'exercise description').",
+        },
+        "top_k": {
+            "type": "integer",
+            "description": "Number of style examples to retrieve.",
+            "default": 4,
+            "nullable": True,
+        },
+    }
+    output_type = "string"
+
+    def __init__(self, retriever: StyleRetriever) -> None:
+        super().__init__()
+        self.retriever = retriever
+
+    def forward(self, query: str, top_k: int = 4) -> str:
+        """Return retrieved style examples as plain text."""
+        style_text = self.retriever.retrieve_style(query=query, k=top_k)
+        
+        if not style_text or style_text == "No style examples found.":
+            return "No relevant style examples found in the style corpus."
+        
+        return style_text
