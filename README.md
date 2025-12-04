@@ -1,39 +1,26 @@
-# Breathing Exercise Chatbot
+# Breath-AI: Breathing Exercise Content Generator
 
-An AI chatbot that answers questions about breathing exercises using retrieval-augmented generation (RAG) from a curated knowledge base.
+An AI agent that generates accurate, on-brand breathing exercise content using a two-LLM RAG architecture. Processes PDFs and applies consistent voice styling for the Breath app.
 
 ## Overview
 
-The Breathing Exercise Chatbot is built with the smolagents framework and provides an interactive way to learn about breathing exercises. The system scrapes breathing exercise content from URLs, stores it in a vector database (ChromaDB), and uses semantic search to answer your questions based strictly on the knowledge base.
+This system uses retrieval-augmented generation (RAG) to create breathing exercise content that:
+- Stays grounded in source material (no hallucination)
+- Matches the Breath app voice consistently
+- Adapts tone via fine-tuning parameters
+- Requires minimal editing before use
 
-## Key Features
+## Architecture
 
-✅ **Interactive Chat Mode**: Have a conversation with the chatbot and ask multiple questions  
-✅ **Single Question Mode**: Ask one question and get an answer quickly  
-✅ **Easy URL Management**: Add/remove URLs in `papers/url.txt` and rerun ingestion  
-✅ **Web Scraping**: Automatically fetches and cleans content from breathing exercise websites  
-✅ **Vector Database**: Stores content in ChromaDB for fast semantic search  
-✅ **Strict Knowledge Boundaries**: Chatbot only answers from your knowledge base, no external searches  
-✅ **No Hallucinations**: Says "I don't know" when information isn't in the knowledge base
+**Two-LLM Pipeline:**
+1. **Retrieval Agent**: Extracts and formats information from PDF knowledge base
+2. **Language Model**: Cleans, simplifies, and applies Breath app voice styling
 
-## Project Structure
-
-```
-Breath-AI/
-├── agent.py                  # Chatbot agent with RAG capabilities
-├── run.py                    # Entry point (interactive & single-question modes)
-├── model_utils.py            # Model initialization (Gemini API)
-├── scraper.py                # URL scraping logic
-├── ingest_exercises.py       # Ingestion pipeline (URLs → ChromaDB)
-├── requirements.txt          # Python dependencies
-├── .env                      # API keys (create this file)
-├── tools/
-│   ├── retrieval_tool.py     # Retrieval tool for searching exercises
-│   └── vector_store.py       # ChromaDB wrapper
-├── papers/
-│   └── url.txt               # URLs to scrape (one per line)
-└── vector_store/             # ChromaDB database (created after ingestion)
-```
+**Key Components:**
+- ChromaDB vector store (content + style corpus)
+- Local embeddings (sentence-transformers/all-MiniLM-L6-v2)
+- Google Gemini 2.5 Flash (LLM)
+- Style corpus for voice consistency
 
 ## Setup
 
@@ -43,203 +30,114 @@ Breath-AI/
 pip install -r requirements.txt
 ```
 
-### 2. Set Up API Key
+### 2. Configure API Key
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```
 GEMINI_API_KEY=your_api_key_here
 ```
 
-Get a Gemini API key from: https://aistudio.google.com/app/apikey
+Get your key from: https://aistudio.google.com/app/apikey
 
-### 3. Add URLs
+### 3. Ingest Content
 
-Edit `papers/url.txt` and add URLs to breathing exercise pages (one per line):
-
-```
-"https://health.clevelandclinic.org/4-7-8-breathing"
-"https://example.com/another-breathing-exercise"
-```
-
-### 4. Ingest the Content
-
-Run the ingestion pipeline to scrape URLs and populate the vector database:
-
+**Ingest PDFs:**
 ```bash
 python ingest_exercises.py
 ```
 
-This will:
-- Read URLs from `papers/url.txt`
-- Scrape each URL using BeautifulSoup
-- Extract and clean the text content
-- Chunk the content into smaller pieces
-- Store everything in ChromaDB with embeddings
+Place PDF files in the `papers/` directory. The script will:
+- Extract text from all PDFs
+- Chunk content (500 chars, 100 overlap)
+- Store in ChromaDB with embeddings
 
-You should see output like:
+**Ingest Style Examples:**
+```bash
+python ingest_style.py
 ```
-============================================================
-Breathing Exercise Ingestion Pipeline
-============================================================
-Scraping: https://health.clevelandclinic.org/4-7-8-breathing
-  ✓ Success: 8234 characters extracted
 
-Successfully scraped 1 out of 1 URLs.
-
-✓ Ingested 16 chunks from: How To Do the 4-7-8 Breathing Exercise
-============================================================
-```
+Processes `.txt` files from `style/` directory to build the voice corpus.
 
 ## Usage
 
-### Interactive Chat Mode (Default)
-
-Start an interactive conversation with the chatbot:
+### Interactive Mode
 
 ```bash
-# Run without arguments for interactive mode
-python run.py
-
-# Or explicitly use the --chat flag
 python run.py --chat
 ```
 
-**Example conversation:**
-
-```bash
-$ python run.py
-
-============================================================
-Breathing Exercise Chatbot - Interactive Mode
-============================================================
-
-Ask questions about breathing exercises from the knowledge base.
-Type 'exit', 'quit', or press Ctrl+C to end the conversation.
-
-🫁 You: How do I do 4-7-8 breathing?
-
-🤖 Chatbot: [Retrieves and answers based on knowledge base]
-
-🫁 You: What are the benefits of this technique?
-
-🤖 Chatbot: [Answers based on knowledge base]
-
-🫁 You: exit
-
-👋 Goodbye! Take care of your breathing!
-```
-
-### Single Question Mode
-
-Ask a single question and get an immediate answer:
+### Single Query
 
 ```bash
 python run.py "How do I do 4-7-8 breathing?"
-python run.py "What are the benefits of breathing exercises?"
-python run.py "What breathing technique helps with anxiety?"
 ```
 
-**Example:**
+### Tone Control
+
+Fine-tune output style with parameters:
 
 ```bash
-$ python run.py "How do I do 4-7-8 breathing?"
-
-============================================================
-Breathing Exercise Chatbot
-============================================================
-
-Query: How do I do 4-7-8 breathing?
-
-[Chatbot retrieves documents and provides answer]
+python run.py "Describe box breathing" \
+  --audience-level intermediate \
+  --length long \
+  --energy neutral \
+  --context pre-work
 ```
 
-### How It Works
+**Available Parameters:**
+- `--audience-level`: `beginner` | `intermediate`
+- `--length`: `short` | `medium` | `long`
+- `--energy`: `very_gentle` | `neutral` | `slightly_uplifting`
+- `--context`: `sleep` | `mid-day_reset` | `pre-work` | `anxiety_spike` | `general`
 
-The chatbot will:
-1. Use semantic search to retrieve relevant content from your knowledge base
-2. Answer your question using ONLY information from the retrieved documents
-3. Say "I don't know" if the information isn't in the knowledge base
-4. Never use external knowledge or search the internet
+## Project Structure
 
-## Knowledge Base Management
+```
+Breath-AI/
+├── agent.py              # Two-LLM agent architecture
+├── run.py                # CLI entry point
+├── model_utils.py        # Gemini model configuration
+├── ingest_exercises.py   # PDF → ChromaDB pipeline
+├── ingest_style.py       # Style corpus ingestion
+├── scraper.py            # PDF text extraction
+├── papers/               # PDF knowledge base
+├── style/                # Style guide examples
+└── vector_store/         # ChromaDB persistence
+```
 
-### Adding New URLs
+## How It Works
 
-1. Edit `papers/url.txt`
-2. Add new URLs (one per line, optionally in quotes)
-3. Rerun ingestion: `python ingest_exercises.py`
+1. **User Query** → CLI input
+2. **Retrieval Agent** → Searches PDF knowledge base, formats raw information
+3. **Language Model** → Retrieves style examples, applies Breath app voice
+4. **Output** → Cleaned, styled content ready for use
 
-The vector database will be cleared and rebuilt with all URLs.
+**Safety:**
+- Only uses information from ingested PDFs
+- Returns "I don't know" when content isn't available
+- Never adds facts not in the knowledge base
 
-### Removing URLs
+## Technical Stack
 
-1. Remove URLs from `papers/url.txt`
-2. Rerun ingestion: `python ingest_exercises.py`
-
-## Technical Details
-
-- **Agent Framework**: smolagents (ReAct agent)
+- **Framework**: smolagents
 - **LLM**: Google Gemini 2.5 Flash
-- **Vector Database**: ChromaDB with persistent storage
-- **Embedding Model**: sentence-transformers/all-MiniLM-L6-v2
-- **Text Chunking**: RecursiveCharacterTextSplitter (500 chars, 100 overlap)
-- **Web Scraping**: BeautifulSoup + requests
+- **Vector DB**: ChromaDB (persistent)
+- **Embeddings**: sentence-transformers/all-MiniLM-L6-v2 (local)
+- **Text Processing**: LangChain (chunking), PyPDF2 (extraction)
 
-## Strict Knowledge Boundaries
+## Adding Content
 
-The chatbot is designed with **strict knowledge boundaries**:
+1. Add PDF files to `papers/` directory
+2. Run `python ingest_exercises.py`
+3. Vector store is cleared and rebuilt with all PDFs
 
-- ✅ Only answers from retrieved documents in your knowledge base
-- ✅ Always retrieves relevant content before answering
-- ✅ Explicitly says "I don't know" when information is not available
-- ✅ Never searches the internet or external sources
-- ❌ Does not use general knowledge about breathing exercises
-- ❌ Does not make up information
+## Adding Style Examples
 
-This ensures reliable, verifiable answers based solely on your curated knowledge base.
-
-## Troubleshooting
-
-### "No content found in knowledge base"
-Run the ingestion pipeline first: `python ingest_exercises.py`
-
-### "All URL scraping attempts failed"
-- Check your internet connection
-- Verify URLs in `papers/url.txt` are valid
-- Check if the websites are accessible
-
-### Chatbot says "I don't know" too often
-- Add more URLs to `papers/url.txt` to expand your knowledge base
-- Make sure the content you're asking about is actually in the scraped pages
-- Try rephrasing your question
-
-### Linter Warnings
-The project uses type hints and follows Python best practices. Run:
-```bash
-python -m py_compile agent.py scraper.py ingest_exercises.py
-```
-
-## Example Workflow
-
-```bash
-# 1. Setup
-pip install -r requirements.txt
-echo 'GEMINI_API_KEY=your_key' > .env
-
-# 2. Add URLs to your knowledge base
-echo '"https://health.clevelandclinic.org/4-7-8-breathing"' > papers/url.txt
-
-# 3. Scrape and embed the content
-python ingest_exercises.py
-
-# 4. Start chatting! (Interactive mode)
-python run.py
-
-# Or ask a single question
-python run.py "How do I do 4-7-8 breathing?"
-```
+1. Add `.txt` files to `style/` directory
+2. Run `python ingest_style.py`
+3. Style corpus is updated
 
 ## License
 
-This project is for educational and personal use.
+Educational and personal use.

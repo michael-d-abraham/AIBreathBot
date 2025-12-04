@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>REPORT</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5/github-markdown.min.css" />
+</head>
+<body>
+<h1 id="breathing-exercise-content-generator-agent">Breathing Exercise
+Content Generator Agent</h1>
+<p><strong>Repository:</strong>
+https://github.com/michael-d-abraham/AIBreathBot</p>
+<hr />
+<h2 id="problem-solution">Problem &amp; Solution</h2>
+<p><strong>Problem:</strong> - Need to write consistent, accurate
+breathing exercise content for mobile app - Maintaining uniform tone and
+style across many exercises - Ensuring accuracy while keeping content
+beginner-friendly</p>
+<p><strong>Solution:</strong> - AI agent with RAG (Retrieval-Augmented
+Generation) architecture - Processes local PDFs → vector database →
+retrieves relevant content - Two-LLM pipeline: retrieval/formatting →
+language cleaning/styling - Style corpus ensures consistent voice -
+Source-grounded: only uses information from knowledge base</p>
+<hr />
+<h2 id="peas-framework">PEAS Framework</h2>
+<table>
+<colgroup>
+<col style="width: 45%" />
+<col style="width: 54%" />
+</colgroup>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Accurate content, matches app theme, beginner-friendly, minimal
+editing needed</td>
+</tr>
+<tr>
+<td><strong>Environment</strong></td>
+<td>CLI interface, ChromaDB vector store, Gemini 2.5 Flash LLM, style
+corpus</td>
+</tr>
+<tr>
+<td><strong>Actuators</strong></td>
+<td>Content generation, semantic search, style application, session
+management</td>
+</tr>
+<tr>
+<td><strong>Sensors</strong></td>
+<td>User queries, semantic similarity search, document retrieval, style
+example retrieval</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="system-architecture">System Architecture</h2>
+<h3 id="two-llm-pipeline">Two-LLM Pipeline</h3>
+<pre><code>User Query (CLI)
+    ↓
+┌─────────────────────────────┐
+│ Retrieval Agent (LLM 1)     │
+│ • retrieve_documents tool   │
+│ • Formats raw info           │
+│ • Returns &quot;NO_RELEVANT_     │
+│   INFORMATION&quot; if empty     │
+└─────────────────────────────┘
+    ↓ (if info found)
+┌─────────────────────────────┐
+│ Language Model (LLM 2)      │
+│ • retrieve_style tool        │
+│ • Cleans &amp; simplifies        │
+│ • Applies Breath app voice   │
+│ • Uses tone parameters       │
+└─────────────────────────────┘
+    ↓
+Styled Response → User</code></pre>
+<h3 id="key-components">Key Components</h3>
+<p><strong>Retrieval Agent</strong>
+(<code>_build_retrieval_agent()</code> in <code>agent.py</code>): -
+Model: Gemini 2.5 Flash via
+<code>model_utils.google_build_reasoning_model()</code> - Tool:
+<code>RetrieveDocumentsTool</code> → <code>ChromaRetriever</code> →
+<code>breathing_exercises</code> collection - Output: Formatted plain
+text (overview/steps/benefits/notes) - Error handling: Returns
+<code>"NO_RELEVANT_INFORMATION"</code> sentinel when no documents
+found</p>
+<p><strong>Language Model</strong> (<code>_build_language_model()</code>
+in <code>agent.py</code>): - Model: Gemini 2.5 Flash (same as retrieval
+agent) - Tool: <code>RetrieveStyleTool</code> →
+<code>StyleRetriever</code> → <code>breath_style_guides</code>
+collection - Input: Formatted raw information from retrieval agent -
+Output: Cleaned, styled response in Breath app voice - Constraints: Only
+uses information from retrieval agent, never adds new facts</p>
+<p><strong>Orchestration</strong> (<code>run_agent()</code> in
+<code>agent.py</code>): - Checks retrieval output for
+<code>"NO_RELEVANT_INFORMATION"</code> → early return - Passes formatted
+text to language model if info exists - Manages tone parameters:
+<code>audience_level</code>, <code>length</code>, <code>energy</code>,
+<code>context</code></p>
+<h3 id="data-flow">Data Flow</h3>
+<ol type="1">
+<li><strong>Ingestion:</strong>
+<ul>
+<li>PDFs → <code>ingest_exercises.py</code> → ChromaDB
+<code>breathing_exercises</code> collection</li>
+<li>Style files → <code>ingest_style.py</code> → ChromaDB
+<code>breath_style_guides</code> collection</li>
+</ul></li>
+<li><strong>Query Processing:</strong>
+<ul>
+<li>CLI (<code>run.py</code>) parses args → calls
+<code>run_agent()</code></li>
+<li>Retrieval agent calls <code>retrieve_documents</code> → formats
+results</li>
+<li>If no info: return <code>NO_INFO_MESSAGE</code> to user</li>
+<li>If info exists: language model calls <code>retrieve_style</code> →
+styles content → returns final answer</li>
+</ul></li>
+<li><strong>Vector Store:</strong>
+<ul>
+<li><code>ChromaRetriever</code>: semantic search on
+<code>breathing_exercises</code> (top-k=4)</li>
+<li><code>StyleRetriever</code>: semantic search on
+<code>breath_style_guides</code> (top-k=4)</li>
+<li>Embeddings: <code>sentence-transformers/all-MiniLM-L6-v2</code>
+(local, no API cost)</li>
+</ul></li>
+</ol>
+<hr />
+<h2 id="reasoning-decision-processes">Reasoning &amp; Decision
+Processes</h2>
+<h3 id="retrieval-agent-reasoning">Retrieval Agent Reasoning</h3>
+<ul>
+<li><strong>Always calls <code>retrieve_documents</code> first</strong>
+(enforced by system prompt)</li>
+<li>Organizes retrieved chunks into structured sections
+(overview/steps/benefits/notes)</li>
+<li><strong>No styling or simplification</strong> — pure extraction and
+formatting</li>
+<li>Returns sentinel <code>"NO_RELEVANT_INFORMATION"</code> when
+knowledge base has no relevant content</li>
+</ul>
+<h3 id="control-decision-in-run_agent">Control Decision (in
+<code>run_agent()</code>)</h3>
+<ul>
+<li>String-based detection: checks for
+<code>"NO_RELEVANT_INFORMATION"</code>, empty responses, or “no
+information” phrases</li>
+<li><strong>Short-circuits pipeline</strong> if no info found → prevents
+hallucination</li>
+<li>Only proceeds to language model if formatted content exists</li>
+</ul>
+<h3 id="language-model-reasoning">Language Model Reasoning</h3>
+<ul>
+<li><strong>Must call <code>retrieve_style</code> first</strong>
+(enforced by prompt)</li>
+<li>Receives formatted raw info + style examples</li>
+<li>Reorganizes and simplifies language while preserving all factual
+content</li>
+<li>Applies tone parameters (<code>audience_level</code>,
+<code>length</code>, <code>energy</code>, <code>context</code>) to adapt
+style</li>
+<li><strong>Cannot add new information</strong> — only rephrases what
+retrieval agent provided</li>
+</ul>
+<h3 id="safety-boundary-decisions">Safety &amp; Boundary Decisions</h3>
+<ul>
+<li><strong>Missing content:</strong> Retrieval agent returns sentinel →
+<code>run_agent()</code> returns fixed “I don’t know” message</li>
+<li><strong>Medical advice:</strong> Prompt-level rules enforce hedging
+language (“may help”, “can support”) and discourage medical claims</li>
+<li><strong>Tone adaptation:</strong> System prompt maps tone parameters
+to style constraints (sentence length, energy level, context
+framing)</li>
+</ul>
+<hr />
+<h2 id="technical-stack-design-choices">Technical Stack &amp; Design
+Choices</h2>
+<p><strong>Tech Stack:</strong> - <code>smolagents</code> (agent
+framework) - Google Gemini 2.5 Flash (LLM) - ChromaDB (vector database)
+- <code>sentence-transformers</code> (local embeddings) -
+<code>pypdf/PyPDF2</code> (PDF extraction) - LangChain (text
+chunking)</p>
+<p><strong>Key Design Decisions:</strong></p>
+<table>
+<colgroup>
+<col style="width: 47%" />
+<col style="width: 52%" />
+</colgroup>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Two-LLM architecture</strong></td>
+<td>Clear separation: retrieval/formatting vs. cleaning/styling;
+prevents information leakage</td>
+</tr>
+<tr>
+<td><strong>Style RAG system</strong></td>
+<td>Separate style corpus enables fine-grained voice control without
+code changes</td>
+</tr>
+<tr>
+<td><strong>Dual retrieval</strong></td>
+<td>Content and style retrieved independently; each LLM uses appropriate
+tools</td>
+</tr>
+<tr>
+<td><strong>Local embeddings</strong></td>
+<td>No API costs, works offline, fast retrieval</td>
+</tr>
+<tr>
+<td><strong>Source grounding</strong></td>
+<td>Must retrieve before generating; architectural pressure against
+hallucination</td>
+</tr>
+<tr>
+<td><strong>Early return on no-info</strong></td>
+<td>Prevents unnecessary LLM calls and hallucinated responses</td>
+</tr>
+<tr>
+<td><strong>Tone parameters</strong></td>
+<td>CLI flags (<code>--audience-level</code>, <code>--length</code>,
+<code>--energy</code>, <code>--context</code>) for fine-tuning</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evolution-week-1-week-4">Evolution: Week 1 → Week 4</h2>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Week 1</th>
+<th>Week 2</th>
+<th>Week 3</th>
+<th>Week 4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Architecture</strong></td>
+<td>Single LLM</td>
+<td>Single LLM</td>
+<td>Single LLM (optional two-pass)</td>
+<td><strong>Two LLMs (always two-pass)</strong></td>
+</tr>
+<tr>
+<td><strong>Style Control</strong></td>
+<td>None</td>
+<td>System prompts</td>
+<td>Prompts + style corpus</td>
+<td>Prompts + style corpus</td>
+</tr>
+<tr>
+<td><strong>Retrieval</strong></td>
+<td>Content only</td>
+<td>Content only</td>
+<td>Content + Style</td>
+<td>Content + Style</td>
+</tr>
+<tr>
+<td><strong>Separation</strong></td>
+<td>None</td>
+<td>None</td>
+<td>None</td>
+<td><strong>Retrieval vs. Language</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key Innovations:</strong> - <strong>Week 2:</strong> System
+prompts control output style - <strong>Week 3:</strong> Style corpus as
+first-class data source; dual retrieval; tone parameters - <strong>Week
+4:</strong> Two-LLM architecture with clear separation of concerns</p>
+<hr />
+<h2 id="evaluation">Evaluation</h2>
+<h3 id="methodology">Methodology</h3>
+<ul>
+<li><strong>Qualitative testing:</strong> Variety of queries (4-7-8
+breathing, box breathing, anxiety help)</li>
+<li><strong>Edge cases:</strong> Out-of-scope queries, ambiguous
+questions</li>
+<li><strong>Safety checks:</strong> Medical advice handling,
+hallucination detection</li>
+<li><strong>Manual inspection:</strong> Compared outputs against source
+PDFs and style corpus</li>
+</ul>
+<h3 id="peas-performance-assessment">PEAS Performance Assessment</h3>
+<p><strong>Performance (Accuracy, Style, Edit Effort):</strong> -
+<strong>Accuracy:</strong> Steps and benefits match source material when
+knowledge base contains relevant content - <strong>Style
+consistency:</strong> Outputs consistently use short sentences, gentle
+tone, permission-based language - <strong>Edit effort:</strong> Typical
+exercises need only minor phrase tweaks (major improvement over manual
+writing)</p>
+<p><strong>Environment (CLI, ChromaDB, LLM):</strong> - CLI is simple
+and supports both single queries and interactive sessions - ChromaDB
+with local embeddings performs well for this corpus size - Architecture
+is portable (LLM changes primarily affect
+<code>model_utils.py</code>)</p>
+<p><strong>Actuators (Generation, Retrieval, Style):</strong> - Clear
+role separation: retrieval LLM actuates on vector store; language LLM
+actuates on wording only - Style retriever successfully injects real
+style examples into context</p>
+<p><strong>Sensors (Input, Search, Scoring):</strong> - Simple input
+handling (CLI args or stdin) - Semantic search works well for thematic
+queries and exercise names - Metadata (titles) preserved in formatted
+text for attribution context</p>
+<h3 id="strengths">Strengths</h3>
+<ul>
+<li><strong>Strong voice consistency:</strong> Style corpus + detailed
+prompts + always-on style retrieval</li>
+<li><strong>Low hallucination rate:</strong> Architectural pressure to
+stay grounded (language model only receives formatted retrieval
+output)</li>
+<li><strong>Good controllability:</strong> Four tone parameters provide
+practical adaptation without re-architecting</li>
+</ul>
+<h3 id="limitations">Limitations</h3>
+<ul>
+<li><strong>Coverage limited by corpus:</strong> Only as comprehensive
+as PDFs in <code>papers/</code> directory</li>
+<li><strong>No explicit citations:</strong> Source titles preserved
+internally but not exposed in final output</li>
+<li><strong>Latency:</strong> Two LLM calls per query (retrieval +
+language) + Chroma queries</li>
+<li><strong>API dependence:</strong> Requires Gemini API availability
+and quota</li>
+<li><strong>Prompt-based safety:</strong> Safety rules not formally
+verified; could degrade with prompt/model changes</li>
+</ul>
+<h3 id="improvement-opportunities">Improvement Opportunities</h3>
+<ul>
+<li><strong>Evaluation harness:</strong> Fixed query set with metrics
+(overlap with gold summaries, style similarity)</li>
+<li><strong>Inline citations:</strong> Preserve source markers in final
+output or add “show sources” mode</li>
+<li><strong>Session memory:</strong> Track explained exercises for
+multi-section content consistency</li>
+<li><strong>Configurable retrieval:</strong> Expose
+<code>max_results</code> and retrieval modes as CLI/config options</li>
+</ul>
+<p><strong>Overall Assessment:</strong> System meets primary goals —
+generates calm, on-brand content with minimal editing, stays grounded in
+sources, has clear control flow suitable for incremental
+improvements.</p>
+<hr />
+<h2 id="usage">Usage</h2>
+<p><strong>Setup:</strong></p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ingest PDFs into knowledge base</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> ingest_exercises.py</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ingest style examples</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> ingest_style.py</span></code></pre></div>
+<p><strong>Generate Content:</strong></p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive mode</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Single question</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py <span class="st">&quot;How do I do 4-7-8 breathing?&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># With tone control</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py <span class="st">&quot;Describe box breathing&quot;</span> <span class="at">--audience-level</span> intermediate <span class="at">--energy</span> neutral</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Interactive with parameters</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> run.py <span class="at">--chat</span> <span class="at">--context</span> sleep <span class="at">--energy</span> very_gentle</span></code></pre></div>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>Built a two-LLM RAG agent that generates breathing exercise content
+matching the Breath app voice while staying source-grounded. Key
+innovations:</p>
+<ul>
+<li><strong>Two-LLM architecture:</strong> Separates
+retrieval/formatting from cleaning/styling</li>
+<li><strong>Style RAG system:</strong> Style corpus as first-class data
+source with dual retrieval</li>
+<li><strong>Source grounding:</strong> Architectural constraints prevent
+hallucination</li>
+<li><strong>Tone parameters:</strong> Fine-grained style control via CLI
+flags</li>
+</ul>
+<p>The system successfully generates accurate, consistent content with
+minimal editing, demonstrating clear separation of concerns and a
+maintainable architecture ready for production use.</p>
+</body>
+</html>
