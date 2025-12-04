@@ -1,421 +1,233 @@
 # Breathing Exercise Content Generator Agent
 
-git repo: https://github.com/michael-d-abraham/AIBreathBot
+**Repository:** https://github.com/michael-d-abraham/AIBreathBot
+
 ---
 
-## Problem Description
+## Problem & Solution
 
-I'm building a breathing exercise app, and I need to write a lot of content for it exercise descriptions, instructions, benefits, etc. I realized I wanted to be more personal in hand developing the exceirise but did want help on writing out the content. And so as I read and find books and articles that I like I will download PDFs and add them to my papers directory. Along with constant editing of the system prompt to taylor all the content follow the feeling and theme and help me keep a uniform theme with my speak across the whole mobile APP.
+**Problem:**
+- Need to write consistent, accurate breathing exercise content for mobile app
+- Maintaining uniform tone and style across many exercises
+- Ensuring accuracy while keeping content beginner-friendly
 
-### The Problem
-- Writing content for each exercise isn't fun
-- Im bad at tone and spelling and keeping things uniform
-- Keeping it acurate 
-- Want content to match my app's calming theme
-
-
-### My Solution
-Built an AI agent that:
-- Processes local PDF files I download and stores them in a vector database
-- Retrieves relevant info when I need it
-- Generates content using customized theme prompts
-- Only uses information from sources (no hallucinations)
-
-I ask for content and it generates text in my app's style. Then I copy it to my project.
+**Solution:**
+- AI agent with RAG (Retrieval-Augmented Generation) architecture
+- Processes local PDFs → vector database → retrieves relevant content
+- Two-LLM pipeline: retrieval/formatting → language cleaning/styling
+- Style corpus ensures consistent voice
+- Source-grounded: only uses information from knowledge base
 
 ---
 
 ## PEAS Framework
 
-**Performance:** Content is accurate, matches my theme, beginner-friendly, needs minimal editing
-
-**Environment:** CLI interface, ChromaDB database, theme system, Gemini LLM
-
-**Actuators:** Generates themed content, searches database, applies style guidelines, manages sessions
-
-**Sensors:** Receives requests, searches with semantic similarity, gets relevant chunks, tracks context
-
----
-
-## Week 1: Basic Prototype
-
-### What I Built
-Basic RAG system that processes local PDF files, extracts text, embeds them, retrieves relevant info, and generates content from sources only.
-
-### Components
-- `scraper.py` - Extracts text content from local PDF files
-- `ingest_exercises.py` - Processes PDFs, chunks text, creates embeddings, stores in ChromaDB
-- `tools/vector_store.py` - Semantic search wrapper
-- `tools/retrieval_tool.py` - Formats results for agent
-- `agent.py` - ReAct agent with source grounding
-- `run.py` - Command-line interface
-
-### Testing
-- Processed and embedded PDF files successfully
-- Retrieved relevant content accurately
-- Generated content only from sources
-- Refused requests outside knowledge base
-
-### Challenges
-- Too much metadata in retrieval
-- Generic output tone
-- No multi-request sessions
-- Couldn't control style
-
----
-
-## Week 2: Theme System
-
-### What I Added
-- Interactive mode for multiple requests
-- Theme system to control output style
-- Simplified retrieval
-- Language guidelines
-- Code cleanup
-
-### Theme System (Key Feature)
-
-The main innovation is language guidelines in system prompts that control output style.
-
-Current theme: Calming and mindful for beginners
-
-Guidelines:
-- Warm, calming language with present-moment words
-- Say "you might" not "you must"
-- Say "this can support" not "this will fix"
-- Simple steps, no jargon
-
-Example:
-```
-"The 4-7-8 breathing technique invites you to gently slow your breath, 
-creating a natural rhythm. You might notice a sense of calm as you 
-breathe in for 4 counts, hold softly for 7, and exhale slowly for 8."
-```
-
-Easy to modify themes by editing system prompts without code changes.
-
-### Other Changes
-- Interactive mode: multiple requests in one session
-- Simplified retrieval: plain text instead of complex objects
-- Removed unused JSON extraction code
-
-### Testing
-- Interactive mode works well
-- Content matches theme consistently
-- Voice stays uniform
-- No hallucination
-- Content ready with minimal editing
-
----
-
-## Week 3: Style RAG System
-
-### What I Added
-- Separate style corpus with golden examples
-- Style ingestion pipeline (`ingest_style.py`)
-- Dual retrieval system (content + style)
-- Tightened and centralized system prompt
-- Two-pass generation mode (optional)
-- Tone control parameters
-
-### Style RAG System (Key Feature)
-
-The main innovation is treating "style" as a first-class data source, separate from factual breathing content.
-
-**Style Corpus:**
-- Separate `style/` directory with golden example texts
-- Examples demonstrate desired tone: warm, gentle, permission-based language
-- Files like `golden_intro_1.txt`, `gentle_closings.txt`, `short_exercise_examples.txt`
-- Stored in separate ChromaDB collection: `breath_style_guides`
-
-**Dual Retrieval:**
-- Agent retrieves both factual content AND style examples
-- Content retrieval: factual information about breathing exercises
-- Style retrieval: tone/phrasing examples from style corpus
-- Agent uses CONTENT for facts, STYLE_EXAMPLES for voice
-
-**How It Works:**
-1. User asks about a breathing exercise
-2. Agent calls `retrieve_documents` → gets factual content
-3. Agent calls `retrieve_style` → gets style examples matching query
-4. Agent generates response using both:
-   - Facts from CONTENT
-   - Tone/phrasing inspired by STYLE_EXAMPLES
-5. Output matches Breath app voice while staying source-grounded
-
-**System Prompt:**
-Centralized comprehensive prompt defining:
-- Breath app voice identity
-- Tone guidelines (warm, grounded, calm, permission-based)
-- Language preferences (short sentences, concrete sensations, avoid clinical terms)
-- Safety rules (no medical claims, hedging language)
-- Default output structure (overview → steps → closing)
-
-**Two-Pass Mode:**
-Optional mode for extra control:
-- Pass 1: Generate neutral, factual description (content only)
-- Pass 2: Rewrite in Breath voice using style examples
-- Exposed via `--two-pass` CLI flag
-
-**Tone Control Parameters:**
-Fine-tune output style:
-- `--audience-level`: beginner | intermediate
-- `--length`: short | medium | long
-- `--energy`: very_gentle | neutral | slightly_uplifting
-- `--context`: sleep | mid-day_reset | pre-work | anxiety_spike | general
-
-### New Components
-- `style/` directory - Golden example texts
-- `ingest_style.py` - Ingests style examples into ChromaDB
-- `StyleRetriever` class in `tools/vector_store.py` - Retrieves style examples
-- `RetrieveStyleTool` in `tools/retrieval_tool.py` - Agent tool for style retrieval
-- Updated `agent.py` - Dual retrieval, comprehensive system prompt
-- Updated `run.py` - CLI flags for two-pass mode and tone parameters
-
-### Testing
-- Style files ingest successfully into separate collection
-- Style retrieval returns relevant examples
-- Agent calls both content and style tools automatically
-- Generated content matches Breath voice consistently
-- Still refuses queries outside knowledge base
-- Two-pass mode produces neutral then styled output
-- Tone parameters affect output appropriately
-- Interactive mode works with all new features
-
----
-
-## Week 4: Two-LLM Architecture
-
-### What I Changed
-- Separated retrieval/formatting from language cleaning/styling into two distinct LLMs
-- Always-on two-pass architecture (no longer optional)
-- Improved error handling for missing information
-- Clear separation of concerns between agents
-
-### Two-LLM Architecture (Key Feature)
-
-The main innovation is separating the agent into two specialized LLMs with distinct responsibilities.
-
-**Retrieval Agent (First LLM):**
-- Retrieves raw information from knowledge base using `retrieve_documents`
-- Formats retrieved information in clear, organized plain text
-- Includes all relevant facts, steps, and details
-- Organizes information logically (overview, steps, benefits, notes)
-- Returns early if no relevant information found
-- **No styling, no simplification** - just retrieval and formatting
-
-**Language Model (Second LLM):**
-- Receives formatted raw information from retrieval agent
-- Cleans and simplifies language
-- Applies Breath app voice style using retrieved style examples
-- Uses tunable variables (audience_level, length, energy, context)
-- **Only uses information from first LLM** - never adds new information
-- Can simplify and rephrase, but keeps all factual content
-
-**Flow:**
-```
-User Query
-    ↓
-Retrieval Agent (First LLM)
-    ├─ Retrieves raw info from knowledge base
-    ├─ Formats it in plain text
-    └─ If no info found → Return early to user
-    ↓
-Language Model (Second LLM)
-    ├─ Receives formatted raw information
-    ├─ Retrieves style examples
-    ├─ Cleans and simplifies language
-    ├─ Applies Breath app voice style
-    ├─ Uses tunable variables (audience_level, length, energy, context)
-    └─ Returns ONLY information from first LLM (no additions)
-    ↓
-User receives cleaned and styled response
-```
-
-**Key Benefits:**
-- Clear separation: retrieval/formatting vs. cleaning/styling
-- Better control: each LLM has focused responsibility
-- No information leakage: second LLM cannot add information not in first LLM's output
-- Improved error handling: early return when no information found
-- Always two-pass: consistent architecture for all queries
-
-### Changes Made
-- Refactored `agent.py` with `_build_retrieval_agent()` and `_build_language_model()` functions
-- New `run_agent()` function orchestrates the two-pass flow
-- Updated `run.py` to always use two-pass architecture (removed `--two-pass` flag)
-- Improved error detection for "no information" cases
-- Maintained backward compatibility with legacy functions
-
-### Testing
-- Two-LLM flow works correctly
-- Retrieval agent formats information properly
-- Language model cleans and styles without adding information
-- Early return works when no information found
-- Tunable variables still work correctly
-- Style examples still retrieved and applied
-
----
-
-## PEAS to Code
-
-**Performance → Code**
-- Accuracy: `retrieve_documents` tool grounds in sources
-- Theme: System instructions in `agent.py` + style corpus retrieval
-- Boundaries: Says "I don't know" when needed
-- Voice consistency: `retrieve_style` tool provides tone examples
-
-**Environment → Code**
-- Database: ChromaDB in `vector_store/` (two collections: content + style)
-- Embeddings: `ingest_exercises.py` (content) + `ingest_style.py` (style)
-- Interface: `run.py` with tone control parameters
-
-**Actuators → Code**
-- Generation: Gemini via `model_utils.py` (used by both LLMs)
-- Content Retrieval: `ChromaRetriever` in `tools/vector_store.py`
-- Style Retrieval: `StyleRetriever` in `tools/vector_store.py`
-- Retrieval Agent: `_build_retrieval_agent()` in `agent.py`
-- Language Model: `_build_language_model()` in `agent.py`
-- Orchestration: `run_agent()` function in `agent.py`
-
-**Sensors → Code**
-- Input: `input()` in `run_interactive_chat()`
-- Content Search: `collection.query()` in ChromaDB (breathing_exercises)
-- Style Search: `collection.query()` in ChromaDB (breath_style_guides)
-- Scoring: Distance metrics from semantic search
+| Component | Description |
+|-----------|-------------|
+| **Performance** | Accurate content, matches app theme, beginner-friendly, minimal editing needed |
+| **Environment** | CLI interface, ChromaDB vector store, Gemini 2.5 Flash LLM, style corpus |
+| **Actuators** | Content generation, semantic search, style application, session management |
+| **Sensors** | User queries, semantic similarity search, document retrieval, style example retrieval |
 
 ---
 
 ## System Architecture
 
-### Two-LLM Architecture Flow
+### Two-LLM Pipeline
 
 ```
-User Query
+User Query (CLI)
     ↓
-┌─────────────────────────────────────┐
-│  Retrieval Agent (First LLM)        │
-│  - Uses retrieve_documents tool     │
-│  - Retrieves raw info from KB       │
-│  - Formats in plain text            │
-│  - Organizes logically               │
-└─────────────────────────────────────┘
+┌─────────────────────────────┐
+│ Retrieval Agent (LLM 1)     │
+│ • retrieve_documents tool   │
+│ • Formats raw info           │
+│ • Returns "NO_RELEVANT_     │
+│   INFORMATION" if empty     │
+└─────────────────────────────┘
+    ↓ (if info found)
+┌─────────────────────────────┐
+│ Language Model (LLM 2)      │
+│ • retrieve_style tool        │
+│ • Cleans & simplifies        │
+│ • Applies Breath app voice   │
+│ • Uses tone parameters       │
+└─────────────────────────────┘
     ↓
-    ├─ If no info found → Return early
-    ↓
-    └─ Formatted Raw Information
-    ↓
-┌─────────────────────────────────────┐
-│  Language Model (Second LLM)        │
-│  - Uses retrieve_style tool         │
-│  - Receives formatted raw info      │
-│  - Cleans and simplifies language   │
-│  - Applies Breath app voice style   │
-│  - Uses tunable variables           │
-│  - NO information addition          │
-└─────────────────────────────────────┘
-    ↓
-Cleaned and Styled Response → User
+Styled Response → User
 ```
 
-### Component Details
+### Key Components
 
-**Retrieval Agent:**
+**Retrieval Agent** (`_build_retrieval_agent()` in `agent.py`):
+- Model: Gemini 2.5 Flash via `model_utils.google_build_reasoning_model()`
 - Tool: `RetrieveDocumentsTool` → `ChromaRetriever` → `breathing_exercises` collection
-- Output: Formatted plain text with all relevant facts
-- Error handling: Returns early if no information found
+- Output: Formatted plain text (overview/steps/benefits/notes)
+- Error handling: Returns `"NO_RELEVANT_INFORMATION"` sentinel when no documents found
 
-**Language Model:**
+**Language Model** (`_build_language_model()` in `agent.py`):
+- Model: Gemini 2.5 Flash (same as retrieval agent)
 - Tool: `RetrieveStyleTool` → `StyleRetriever` → `breath_style_guides` collection
 - Input: Formatted raw information from retrieval agent
-- Output: Cleaned and styled response in Breath app voice
-- Constraints: Only uses information from retrieval agent, never adds new info
+- Output: Cleaned, styled response in Breath app voice
+- Constraints: Only uses information from retrieval agent, never adds new facts
 
-**How It Works**
+**Orchestration** (`run_agent()` in `agent.py`):
+- Checks retrieval output for `"NO_RELEVANT_INFORMATION"` → early return
+- Passes formatted text to language model if info exists
+- Manages tone parameters: `audience_level`, `length`, `energy`, `context`
 
-Setup:
-1. Download PDF files and place them in `papers/` directory
-2. Run `ingest_exercises.py` → processes PDFs and stores factual content in `breathing_exercises` collection
-3. Add style examples to `style/` directory
-4. Run `ingest_style.py` → stores style examples in `breath_style_guides` collection
-5. Both collections ready in ChromaDB
+### Data Flow
 
-Usage:
-1. Request content in CLI (with tone parameters: audience_level, length, energy, context)
-2. Retrieval Agent retrieves and formats raw information
-3. Language Model retrieves style examples, cleans and styles the information
-4. Receive cleaned and styled response ready for app
+1. **Ingestion:**
+   - PDFs → `ingest_exercises.py` → ChromaDB `breathing_exercises` collection
+   - Style files → `ingest_style.py` → ChromaDB `breath_style_guides` collection
+
+2. **Query Processing:**
+   - CLI (`run.py`) parses args → calls `run_agent()`
+   - Retrieval agent calls `retrieve_documents` → formats results
+   - If no info: return `NO_INFO_MESSAGE` to user
+   - If info exists: language model calls `retrieve_style` → styles content → returns final answer
+
+3. **Vector Store:**
+   - `ChromaRetriever`: semantic search on `breathing_exercises` (top-k=4)
+   - `StyleRetriever`: semantic search on `breath_style_guides` (top-k=4)
+   - Embeddings: `sentence-transformers/all-MiniLM-L6-v2` (local, no API cost)
 
 ---
 
-## Technical Details
+## Reasoning & Decision Processes
 
-**Tech Stack**
-- smolagents (agent framework)
+### Retrieval Agent Reasoning
+- **Always calls `retrieve_documents` first** (enforced by system prompt)
+- Organizes retrieved chunks into structured sections (overview/steps/benefits/notes)
+- **No styling or simplification** — pure extraction and formatting
+- Returns sentinel `"NO_RELEVANT_INFORMATION"` when knowledge base has no relevant content
+
+### Control Decision (in `run_agent()`)
+- String-based detection: checks for `"NO_RELEVANT_INFORMATION"`, empty responses, or "no information" phrases
+- **Short-circuits pipeline** if no info found → prevents hallucination
+- Only proceeds to language model if formatted content exists
+
+### Language Model Reasoning
+- **Must call `retrieve_style` first** (enforced by prompt)
+- Receives formatted raw info + style examples
+- Reorganizes and simplifies language while preserving all factual content
+- Applies tone parameters (`audience_level`, `length`, `energy`, `context`) to adapt style
+- **Cannot add new information** — only rephrases what retrieval agent provided
+
+### Safety & Boundary Decisions
+- **Missing content:** Retrieval agent returns sentinel → `run_agent()` returns fixed "I don't know" message
+- **Medical advice:** Prompt-level rules enforce hedging language ("may help", "can support") and discourage medical claims
+- **Tone adaptation:** System prompt maps tone parameters to style constraints (sentence length, energy level, context framing)
+
+---
+
+## Technical Stack & Design Choices
+
+**Tech Stack:**
+- `smolagents` (agent framework)
 - Google Gemini 2.5 Flash (LLM)
 - ChromaDB (vector database)
-- sentence-transformers (local embeddings)
-- pypdf/PyPDF2 (PDF text extraction)
-- LangChain (chunking)
+- `sentence-transformers` (local embeddings)
+- `pypdf/PyPDF2` (PDF extraction)
+- LangChain (text chunking)
 
-**Design Choices**
+**Key Design Decisions:**
 
-Two-LLM Architecture: Always-on separation of retrieval/formatting from cleaning/styling ensures clear responsibilities and prevents information leakage
-
-Style RAG: Separate style corpus from content, enables fine-grained voice control
-
-Dual Retrieval: Content and style retrieved separately, each LLM uses appropriate tools
-
-System Prompt Centralization: Voice rules in comprehensive prompts for each LLM
-
-Two Collections: Clear separation between factual content and style examples
-
-No Chunking for Style: Style examples are short, stored as-is
-
-Tone Parameters: CLI flags for fine-tuning output style (audience_level, length, energy, context)
-
-Local Embeddings: No API costs, works offline
-
-Source Grounding: Must retrieve before generating, won't make things up
-
-Simple Retrieval: Plain text output, easier processing
-
-Error Handling: Early return when no information found, prevents unnecessary processing
+| Decision | Rationale |
+|----------|-----------|
+| **Two-LLM architecture** | Clear separation: retrieval/formatting vs. cleaning/styling; prevents information leakage |
+| **Style RAG system** | Separate style corpus enables fine-grained voice control without code changes |
+| **Dual retrieval** | Content and style retrieved independently; each LLM uses appropriate tools |
+| **Local embeddings** | No API costs, works offline, fast retrieval |
+| **Source grounding** | Must retrieve before generating; architectural pressure against hallucination |
+| **Early return on no-info** | Prevents unnecessary LLM calls and hallucinated responses |
+| **Tone parameters** | CLI flags (`--audience-level`, `--length`, `--energy`, `--context`) for fine-tuning |
 
 ---
 
-## Week 1 vs Week 2 vs Week 3 vs Week 4
+## Evolution: Week 1 → Week 4
 
 | Aspect | Week 1 | Week 2 | Week 3 | Week 4 |
 |--------|--------|--------|--------|--------|
-| Purpose | Basic generation | Production tool | Production tool + voice control | Production tool + separated concerns |
-| Style | Generic | Themed (prompts) | Themed (prompts + style corpus) | Themed (prompts + style corpus) |
-| Retrieval | Content only | Content only | Content + Style (dual) | Content + Style (dual) |
-| Architecture | Single LLM | Single LLM | Single LLM (optional two-pass) | Two LLMs (always two-pass) |
-| Mode | Single request | Interactive | Interactive + optional two-pass | Interactive (always two-pass) |
-| Voice Control | None | System prompt | System prompt + style examples + tone params | System prompt + style examples + tone params |
-| Separation | None | None | None | Retrieval/formatting vs. cleaning/styling |
-| Code | Prototype | Clean | Extended | Refactored with clear separation |
+| **Architecture** | Single LLM | Single LLM | Single LLM (optional two-pass) | **Two LLMs (always two-pass)** |
+| **Style Control** | None | System prompts | Prompts + style corpus | Prompts + style corpus |
+| **Retrieval** | Content only | Content only | Content + Style | Content + Style |
+| **Separation** | None | None | None | **Retrieval vs. Language** |
+
+**Key Innovations:**
+- **Week 2:** System prompts control output style
+- **Week 3:** Style corpus as first-class data source; dual retrieval; tone parameters
+- **Week 4:** Two-LLM architecture with clear separation of concerns
+
+---
+
+## Evaluation
+
+### Methodology
+- **Qualitative testing:** Variety of queries (4-7-8 breathing, box breathing, anxiety help)
+- **Edge cases:** Out-of-scope queries, ambiguous questions
+- **Safety checks:** Medical advice handling, hallucination detection
+- **Manual inspection:** Compared outputs against source PDFs and style corpus
+
+### PEAS Performance Assessment
+
+**Performance (Accuracy, Style, Edit Effort):**
+- **Accuracy:** Steps and benefits match source material when knowledge base contains relevant content
+- **Style consistency:** Outputs consistently use short sentences, gentle tone, permission-based language
+- **Edit effort:** Typical exercises need only minor phrase tweaks (major improvement over manual writing)
+
+**Environment (CLI, ChromaDB, LLM):**
+- CLI is simple and supports both single queries and interactive sessions
+- ChromaDB with local embeddings performs well for this corpus size
+- Architecture is portable (LLM changes primarily affect `model_utils.py`)
+
+**Actuators (Generation, Retrieval, Style):**
+- Clear role separation: retrieval LLM actuates on vector store; language LLM actuates on wording only
+- Style retriever successfully injects real style examples into context
+
+**Sensors (Input, Search, Scoring):**
+- Simple input handling (CLI args or stdin)
+- Semantic search works well for thematic queries and exercise names
+- Metadata (titles) preserved in formatted text for attribution context
+
+### Strengths
+- **Strong voice consistency:** Style corpus + detailed prompts + always-on style retrieval
+- **Low hallucination rate:** Architectural pressure to stay grounded (language model only receives formatted retrieval output)
+- **Good controllability:** Four tone parameters provide practical adaptation without re-architecting
+
+### Limitations
+- **Coverage limited by corpus:** Only as comprehensive as PDFs in `papers/` directory
+- **No explicit citations:** Source titles preserved internally but not exposed in final output
+- **Latency:** Two LLM calls per query (retrieval + language) + Chroma queries
+- **API dependence:** Requires Gemini API availability and quota
+- **Prompt-based safety:** Safety rules not formally verified; could degrade with prompt/model changes
+
+### Improvement Opportunities
+- **Evaluation harness:** Fixed query set with metrics (overlap with gold summaries, style similarity)
+- **Inline citations:** Preserve source markers in final output or add "show sources" mode
+- **Session memory:** Track explained exercises for multi-section content consistency
+- **Configurable retrieval:** Expose `max_results` and retrieval modes as CLI/config options
+
+**Overall Assessment:** System meets primary goals — generates calm, on-brand content with minimal editing, stays grounded in sources, has clear control flow suitable for incremental improvements.
 
 ---
 
 ## Usage
 
-Add content sources:
+**Setup:**
 ```bash
-# Download PDF files and place them in papers/ directory
-# Then run:
+# Ingest PDFs into knowledge base
 python ingest_exercises.py
-```
 
-Add style examples:
-```bash
-# Edit files in style/ directory, then:
+# Ingest style examples
 python ingest_style.py
 ```
 
-Generate content:
+**Generate Content:**
 ```bash
-# Interactive mode (default)
+# Interactive mode
 python run.py
 
 # Single question
@@ -426,31 +238,17 @@ python run.py "Describe box breathing" --audience-level intermediate --energy ne
 
 # Interactive with parameters
 python run.py --chat --context sleep --energy very_gentle
-
-# Note: Two-pass architecture is always active (no --two-pass flag needed)
 ```
 
 ---
 
 ## Conclusion
 
-Built an AI agent that helps me create content for my app. Week 1 got basic RAG working. Week 2 added theme system using customized system prompts. Week 3 added style RAG system with dual retrieval. Week 4 refactored to a two-LLM architecture with clear separation of concerns.
+Built a two-LLM RAG agent that generates breathing exercise content matching the Breath app voice while staying source-grounded. Key innovations:
 
-Main innovations:
-- Week 2: Comprehensive system prompts control output style
-- Week 3: Style corpus as first-class data source, dual retrieval (content + style), tone control parameters
-- Week 4: Two-LLM architecture separating retrieval/formatting from cleaning/styling
+- **Two-LLM architecture:** Separates retrieval/formatting from cleaning/styling
+- **Style RAG system:** Style corpus as first-class data source with dual retrieval
+- **Source grounding:** Architectural constraints prevent hallucination
+- **Tone parameters:** Fine-grained style control via CLI flags
 
-The system now uses a two-LLM architecture:
-1. **Retrieval Agent** retrieves and formats raw information from the knowledge base
-2. **Language Model** cleans, simplifies, and styles the information using golden style files and tunable variables
-
-This separation ensures:
-- Clear responsibilities for each LLM
-- No information leakage (second LLM only uses information from first LLM)
-- Better error handling (early return when no information found)
-- Consistent architecture for all queries (always two-pass)
-
-The agent retrieves both factual content and style examples, generating responses that match the Breath app voice while staying source-grounded. Tone parameters allow fine-tuning for different contexts (audience_level, length, energy, context).
-
-Ready for production use with enhanced voice consistency and clear architectural separation.
+The system successfully generates accurate, consistent content with minimal editing, demonstrating clear separation of concerns and a maintainable architecture ready for production use.

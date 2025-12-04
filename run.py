@@ -8,33 +8,23 @@ from agent import run_agent
 
 def print_usage():
     """Print usage information."""
-    print("Breathing Exercise Chatbot")
-    print("=" * 60)
+    print("Setup (first time only):")
+    print("  python ingest_exercises.py")
+    print("  python ingest_style.py")
     print("\nUsage:")
-    print("  1. Single Question Mode:")
-    print("     python run.py \"<your question>\"")
-    print("\n  2. Interactive Chat Mode:")
-    print("     python run.py")
-    print("     python run.py --chat")
-    print("\nOptions:")
-    print("  --audience-level LEVEL   Target audience (beginner | intermediate)")
-    print("  --length LENGTH         Output length (short | medium | long)")
-    print("  --energy ENERGY         Energy level (very_gentle | neutral | slightly_uplifting)")
-    print("  --context CONTEXT       Usage context (sleep | mid-day_reset | pre-work | anxiety_spike | general)")
-    print("\nNote: The system always uses a two-pass architecture:")
-    print("      1. Retrieval Agent: Retrieves and formats raw information")
-    print("      2. Language Model: Cleans and styles the information")
+    print("  python run.py \"<your question>\"")
+    print("  python run.py --chat")
     print("\nExamples:")
-    print("  Single question:")
-    print("    python run.py \"How do I do 4-7-8 breathing?\"")
-    print("    python run.py \"What are the benefits?\"")
-    print("    python run.py \"Describe box breathing\" --audience-level intermediate --energy neutral")
-    print("\n  Interactive chat:")
-    print("    python run.py --chat")
-    print("    (then ask multiple questions in a conversation)")
-    print("\nNote: Make sure to run 'python ingest_exercises.py' first to")
-    print("      populate the knowledge base with breathing exercise content.")
-    print("      Also run 'python ingest_style.py' to populate style examples.")
+    print("  python run.py \"How do I do 4-7-8 breathing?\"")
+    print("  python run.py \"Create me a short description for deep breathing\"")
+    print("  python run.py \"What are the benefits of box breathing?\"")
+    print("\nStyle Keywords:")
+    print("  - shortDescription: 6-12 word summary")
+    print("  - description: 2-4 sentence explanation")
+    print("  - benefit: list of benefits")
+    print("  - method: step-by-step instructions")
+
+    
 
 
 def run_single_question(
@@ -53,37 +43,20 @@ def run_single_question(
         energy: Energy level
         context: Usage context
     """
-    print(f"\n{'='*60}")
-    print("Breathing Exercise Chatbot")
-    print(f"{'='*60}")
-    print(f"\nQuery: {query}\n")
-    print("Mode: Two-pass (Retrieval Agent → Language Model)\n")
-    
     try:
         result = run_agent(
             query=query,
-            verbose=2,
+            verbose=0,
             audience_level=audience_level,
             length=length,
             energy=energy,
             context=context,
         )
-        
-        print(f"\n{'='*60}")
-        print("=== Answer ===")
-        print(f"{'='*60}")
         print(result)
     except Exception as e:
         error_msg = str(e)
-        print(f"\n{'='*60}")
-        print("=== Error ===")
-        print(f"{'='*60}")
         if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-            print(f"Rate limit error: {error_msg[:300]}")
-            print("\n💡 Tip: You've hit your API quota limit. Please:")
-            print("   - Wait a few minutes before trying again")
-            print("   - Check your API usage at https://ai.dev/usage")
-            print("   - Consider upgrading your plan if needed")
+            print(f"Rate limit error. Please wait a few minutes and try again.")
         else:
             print(f"Error: {error_msg}")
 
@@ -102,70 +75,49 @@ def run_interactive_chat(
         energy: Energy level
         context: Usage context
     """
-    print(f"\n{'='*60}")
-    print("Breathing Exercise Chatbot - Interactive Mode")
-    print(f"{'='*60}")
-    print("\nAsk questions about breathing exercises from the knowledge base.")
-    print("Type 'exit', 'quit', or press Ctrl+C to end the conversation.\n")
-    print("Mode: Two-pass (Retrieval Agent → Language Model)")
-    print(f"Settings: audience={audience_level}, length={length}, energy={energy}, context={context}\n")
+    print("Ask questions about breathing exercises. Type 'exit' to quit.\n")
     
     while True:
         try:
-            # Get user input
-            question = input("\n🫁 You: ").strip()
+            question = input("You: ").strip()
             
-            # Check for exit commands
             if question.lower() in ['exit', 'quit', 'q']:
-                print("\n👋 Goodbye! Take care of your breathing!")
                 break
             
-            # Skip empty inputs
             if not question:
                 continue
             
-            # Run the agent
-            print("\n🤖 Chatbot: ", end="", flush=True)
             try:
                 result = run_agent(
                     query=question,
-                    verbose=1,
+                    verbose=0,
                     audience_level=audience_level,
                     length=length,
                     energy=energy,
                     context=context,
                 )
-                print(result)
+                print(f"\n{result}\n")
             except Exception as e:
                 error_msg = str(e)
-                # Check for rate limit errors
                 if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-                    print(f"\n❌ Rate limit error: {error_msg[:200]}")
-                    print("\n💡 Tip: You've hit your API quota limit. Please:")
-                    print("   - Wait a few minutes before trying again")
-                    print("   - Check your API usage at https://ai.dev/usage")
-                    print("   - Consider upgrading your plan if needed")
+                    print("Rate limit error. Please wait and try again.\n")
                 else:
-                    print(f"\n❌ Error: {error_msg}")
-                    print("Please try asking another question.")
+                    print(f"Error: {error_msg}\n")
             
         except KeyboardInterrupt:
-            print("\n\n👋 Goodbye! Take care of your breathing!")
             break
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
-                print(f"\n❌ Rate limit error: {error_msg[:200]}")
-                print("\n💡 Tip: You've hit your API quota limit. Please wait before trying again.")
+                print("Rate limit error. Please wait and try again.\n")
             else:
-                print(f"\n❌ Error: {error_msg}")
-                print("Please try asking another question.")
+                print(f"Error: {error_msg}\n")
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Breathing Exercise Content Generator Agent",
+        description="Breathing Exercise Chatbot",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     
