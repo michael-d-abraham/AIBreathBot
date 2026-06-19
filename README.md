@@ -1,20 +1,20 @@
 # Breath-AI
 
-**Turn research PDFs into calm, on-brand breathing content for your app.**
+**Generate research-backed breathing content with a consistent brand voice.**
 
-Ask a question in plain English — get back exercise copy that matches your voice, stays grounded in your sources, and says *"I don't know"* when it can't find an answer.
+Built for my mindfulness app, **JustBreatheBro** — Breath-AI turns peer-reviewed research into app-ready breathing exercises while maintaining a calm, approachable tone.
+
+- **App Store:** [Download JustBreatheBro](https://apps.apple.com/us/app/justbreathebro/id6756590863)
+- **GitHub:** [github.com/michael-d-abraham/JustBreatheBro](https://github.com/michael-d-abraham/JustBreatheBro)
 
 ---
 
 ## Why I built this
 
-For my app 
-- **App Store:** [Download JustBreatheBro](https://apps.apple.com/us/app/justbreathebro/id6756590863)
-- **GitHub:** [github.com/michael-d-abraham/JustBreatheBro](https://github.com/michael-d-abraham/JustBreatheBro)
-
 I needed a way to generate breathing exercise content that was both scientifically accurate and consistent with the calm, approachable voice of the app.
 
 Breath-AI solves this by generating content exclusively from a curated library of peer-reviewed research while using a separate style retrieval system to maintain a consistent brand voice. Strict guardrails prevent the system from relying on internet searches or unsupported information, ensuring responses remain grounded, accurate, and on-brand.
+
 ---
 
 ## Highlights
