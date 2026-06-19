@@ -1,12 +1,15 @@
-# Breath-Bot
+# Breathe-Bot
 
-**Generate research-backed breathing content with a consistent brand voice.**
+**Research-backed content in your voice — any domain, grounded in your sources.**
 
-Built for my mindfulness app, **JustBreatheBro** — Breath-AI turns peer-reviewed research into app-ready breathing exercises while maintaining a calm, approachable tone.
+Fine-tune the tone. Feed it your PDFs or scraped content. Get back natural copy that sounds like you, not generic AI.
+
+Built for my mindfulness app, **JustBreatheBro** — but designed to work for any domain.
 
 - **App Store:** [Download JustBreatheBro](https://apps.apple.com/us/app/justbreathebro/id6756590863)
 - **GitHub:** [github.com/michael-d-abraham/JustBreatheBro](https://github.com/michael-d-abraham/JustBreatheBro)
 
+All content used in JustBreatheBro was derived from Breathe-Bot.
 ---
 
 ## Why I built this
@@ -97,9 +100,21 @@ Hard rules always apply: only use retrieved facts, warm tone, no medical claims.
 
 ### Where the knowledge comes from
 
-**Research papers** — 7 peer-reviewed PDFs on breathing techniques (diaphragmatic breathing, pain management, psychology research, and more). This is the only source of facts.
+**Research papers** — peer-reviewed PDFs on breathing techniques (diaphragmatic breathing, pain management, psychology research, and more). This is the only source of facts.
 
 **Style guides** — 4 example files that teach the system how JustBreatheBro should sound: short descriptions, full descriptions, benefits, and methods. Update the voice by adding new examples — no code changes needed.
+
+---
+
+### Make it yours
+
+This isn't locked to breathing or JustBreatheBro. Point it at any domain you care about.
+
+- **Drop in your own PDFs** — add files to `papers/` and re-run ingestion
+- **Scrape from the web** — pull content from sites using the built-in scraper
+- **Teach it your voice** — add a few style examples to `style/` and it learns how you write
+
+Same guardrails, same workflow — grounded facts from *your* sources, natural copy in *your* tone. Nutrition, fitness, meditation, or anything else you're building for.
 
 ---
 
