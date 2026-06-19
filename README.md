@@ -6,6 +6,27 @@ Ask a question in plain English — get back exercise copy that matches your voi
 
 ---
 
+## Why I built this
+
+For my app 
+- **App Store:** [Download JustBreatheBro](https://apps.apple.com/us/app/justbreathebro/id6756590863)
+- **GitHub:** [github.com/michael-d-abraham/JustBreatheBro](https://github.com/michael-d-abraham/JustBreatheBro)
+
+I needed a way to generate breathing exercise content that was both scientifically accurate and consistent with the calm, approachable voice of the app.
+
+Breath-AI solves this by generating content exclusively from a curated library of peer-reviewed research while using a separate style retrieval system to maintain a consistent brand voice. Strict guardrails prevent the system from relying on internet searches or unsupported information, ensuring responses remain grounded, accurate, and on-brand.
+---
+
+## Highlights
+
+- **Built a complete RAG system from scratch**
+- **Created a dual-retrieval architecture** (content + style)
+- **Implemented hallucination guardrails**
+- **Designed a production content-generation workflow**
+- **Built something used by a real mobile app**
+
+---
+
 ## What you can do
 
 - Generate **descriptions**, **step-by-step methods**, **benefits**, and **short summaries**
@@ -137,7 +158,7 @@ Two specialized LLMs with separate responsibilities — formal retrieval vs. nat
 - **Source grounding** — language model only sees formatted retrieval output, not raw PDFs
 - **Early return** — `NO_RELEVANT_INFORMATION` sentinel stops the pipeline before styling
 - **Local embeddings** — `sentence-transformers/all-MiniLM-L6-v2`, zero embedding API cost
-d
+
 ---
 
 ## Technical stack
@@ -190,9 +211,15 @@ python-dotenv · beautifulsoup4 · requests · pypdf
 
 ---
 
-## Skills & concepts demonstrated
+## Key concepts demonstrated
 
-RAG · multi-agent orchestration · dual vector retrieval · source grounding · semantic search · prompt engineering · tool-calling agents · ChromaDB · local embeddings · PDF ingestion pipelines · CLI design · wellness AI safety patterns · production content generation
+- Retrieval-Augmented Generation (RAG)
+- Multi-agent orchestration
+- Source-grounded content generation
+- Vector search with ChromaDB
+- Tool-calling agents
+- Prompt and context engineering
+- PDF ingestion and embedding pipelines
 
 ---
 
