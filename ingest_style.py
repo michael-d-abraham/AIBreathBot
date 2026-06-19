@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Ingests style guide examples from the style/ directory into a ChromaDB collection."""
 
 from __future__ import annotations
 
@@ -18,14 +17,6 @@ DEFAULT_COLLECTION_NAME = "breath_style_guides"
 
 
 def read_style_files(style_dir: Path) -> List[tuple[str, str]]:
-    """Read all .txt files from the style directory.
-    
-    Args:
-        style_dir: Path to the style directory
-        
-    Returns:
-        List of tuples: (filename, content)
-    """
     if not style_dir.exists():
         raise ValueError(f"Style directory not found: {style_dir}")
     
@@ -40,7 +31,6 @@ def read_style_files(style_dir: Path) -> List[tuple[str, str]]:
 
 
 def parse_args() -> ArgumentParser:
-    """Parse command line arguments."""
     parser = ArgumentParser(description="Ingest style guide examples into ChromaDB.")
     parser.add_argument(
         "--style-dir",
@@ -63,7 +53,6 @@ def parse_args() -> ArgumentParser:
 
 
 def main() -> None:
-    """Main ingestion function."""
     parser = parse_args()
     args = parser.parse_args()
 
@@ -79,7 +68,6 @@ def main() -> None:
     print(f"Collection: {collection_name}")
     print(f"{'='*60}\n")
 
-    # Step 1: Read style files
     print("Step 1: Reading style files...")
     style_files = read_style_files(style_dir)
     
@@ -88,7 +76,6 @@ def main() -> None:
     
     print(f"Found {len(style_files)} style files.\n")
 
-    # Step 2: Initialize ChromaDB
     print("Step 2: Initializing ChromaDB...")
     client = chromadb.PersistentClient(path=str(persist_dir))
     embedding_fn = SentenceTransformerEmbeddingFunction(
@@ -98,12 +85,10 @@ def main() -> None:
         name=collection_name, embedding_function=embedding_fn
     )
 
-    # Clear existing data
     if collection.count() > 0:
         print(f"Clearing existing {collection.count()} documents from collection.")
         collection.delete(ids=collection.get()["ids"])
 
-    # Step 3: Process and ingest content
     print("\nStep 3: Processing and ingesting style examples...")
     
     documents: List[str] = []
@@ -113,7 +98,6 @@ def main() -> None:
     for filename, content in style_files:
         documents.append(content)
         metadatas.append({"source": f"style/{filename}"})
-        # Create ID from filename (remove .txt extension)
         doc_id = filename.replace('.txt', '').replace('/', '-')
         ids.append(doc_id)
         print(f"  ✓ Prepared: {filename}")

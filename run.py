@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Entry point for the Breathing Exercise Agent."""
 
 import sys
 import argparse
@@ -7,7 +6,6 @@ from agent import run_agent
 
 
 def print_usage():
-    """Print usage information."""
     print("Setup (first time only):")
     print("  python ingest_exercises.py")
     print("  python ingest_style.py")
@@ -34,15 +32,6 @@ def run_single_question(
     energy: str = "very_gentle",
     context: str = "general",
 ):
-    """Run the agent for a single question.
-    
-    Args:
-        query: User question
-        audience_level: Target audience level
-        length: Output length preference
-        energy: Energy level
-        context: Usage context
-    """
     try:
         result = run_agent(
             query=query,
@@ -67,14 +56,6 @@ def run_interactive_chat(
     energy: str = "very_gentle",
     context: str = "general",
 ):
-    """Run the agent in interactive chat mode.
-    
-    Args:
-        audience_level: Target audience level
-        length: Output length preference
-        energy: Energy level
-        context: Usage context
-    """
     print("Ask questions about breathing exercises. Type 'exit' to quit.\n")
     
     while True:
@@ -115,7 +96,6 @@ def run_interactive_chat(
 
 
 def main():
-    """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Breathing Exercise Chatbot",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -160,18 +140,15 @@ def main():
     
     args = parser.parse_args()
     
-    # Help flag
     if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] in ["-h", "--help", "help"]):
         print_usage()
         return
     
-    # Extract parameters
     audience_level = args.audience_level
     length = args.length
     energy = args.energy
     context = args.context
     
-    # Interactive mode
     if args.interactive or not args.query:
         run_interactive_chat(
             audience_level=audience_level,
@@ -181,7 +158,6 @@ def main():
         )
         return
     
-    # Single question mode
     run_single_question(
         query=args.query,
         audience_level=audience_level,

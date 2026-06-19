@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 
-
-"""Ingests breathing exercise content from local PDF files into a ChromaDB collection."""
-
 from __future__ import annotations
 
 from argparse import ArgumentParser
@@ -25,7 +22,6 @@ CHUNK_OVERLAP = 100
 
 
 def chunk_text(text: str) -> Iterable[str]:
-    """Split text into chunks using recursive character text splitter."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
@@ -35,31 +31,19 @@ def chunk_text(text: str) -> Iterable[str]:
 
 
 def process_pdf_file(pdf_path: Path) -> tuple[list[str], list[dict], list[str]]:
-    """Process a PDF file by extracting content, chunking it, and creating metadata.
-    
-    Args:
-        pdf_path: Path to the PDF file
-        
-    Returns:
-        Tuple of (documents, metadatas, ids)
-    """
     documents: list[str] = []
     metadatas: list[dict] = []
     ids: list[str] = []
 
     try:
         title, content = extract_pdf_content_from_file(pdf_path)
-    except Exception as e:
-        # Return empty lists if extraction fails
+    except Exception:
         return documents, metadatas, ids
     
-    # Skip if no content extracted
     if not content.strip():
         return documents, metadatas, ids
     
-    # Create a safe ID from the filename
     file_id = pdf_path.stem.replace(' ', '-').replace('_', '-').replace('.', '-')
-    # Limit length
     file_id = file_id[:50]
     
     chunks = list(chunk_text(content))
@@ -77,7 +61,6 @@ def process_pdf_file(pdf_path: Path) -> tuple[list[str], list[dict], list[str]]:
 
 
 def parse_args() -> ArgumentParser:
-    """Parse command line arguments."""
     parser = ArgumentParser(description="Ingest breathing exercise content from PDF files into ChromaDB.")
     parser.add_argument(
         "--papers-dir",
@@ -100,7 +83,6 @@ def parse_args() -> ArgumentParser:
 
 
 def main() -> None:
-    """Main ingestion function."""
     parser = parse_args()
     args = parser.parse_args()
 
@@ -116,7 +98,6 @@ def main() -> None:
     print(f"Collection: {collection_name}")
     print(f"{'='*60}\n")
 
-    # Step 1: Find all PDF files
     print("Step 1: Finding PDF files...")
     if not papers_dir.exists():
         raise ValueError(f"PDF directory not found: {papers_dir}")
@@ -128,7 +109,6 @@ def main() -> None:
     
     print(f"Found {len(pdf_files)} PDF file(s).\n")
 
-    # Step 2: Initialize ChromaDB
     print("Step 2: Initializing ChromaDB...")
     client = chromadb.PersistentClient(path=str(persist_dir))
     embedding_fn = SentenceTransformerEmbeddingFunction(
@@ -138,12 +118,10 @@ def main() -> None:
         name=collection_name, embedding_function=embedding_fn
     )
 
-    # Clear existing data
     if collection.count() > 0:
         print(f"Clearing existing {collection.count()} documents from collection.")
         collection.delete(ids=collection.get()["ids"])
 
-    # Step 3: Process and ingest content
     print("\nStep 3: Processing and ingesting content...")
     total_chunks = 0
     successful_files = 0
