@@ -1,4 +1,4 @@
-# Breath-AI
+# Breath-Bot
 
 **Generate research-backed breathing content with a consistent brand voice.**
 
@@ -27,24 +27,79 @@ Breath-AI solves this by generating content exclusively from a curated library o
 
 ---
 
-## What you can do
+## What it does
 
 - Generate **descriptions**, **step-by-step methods**, **benefits**, and **short summaries**
 - Keep a **consistent brand voice** across every exercise
 - **Adapt tone** for sleep, anxiety, pre-work, mid-day reset, and more
 - Trust the output — facts come from **your PDFs**, not the model's imagination
+- Say **"I don't know"** when the research library has no answer — never guess
 
-A user asks a question → BreathBot returns structured content → ready for a mobile app screen:
+---
+
+## How it works
+
+### From question to app content
+
+Ask a question in plain English. Breath-AI returns structured content ready to drop into a mobile app screen.
 
 ![How Breath-AI works end-to-end — CLI query to structured app content](images/HowItsUsed.png)
 
 *Example: "Give me the method for Deep Breathing" produces step-by-step instructions, tips, and app-ready sections (Summary, Benefits, Method).*
 
-```bash
-python run.py "How do I do 4-7-8 breathing?"
-python run.py --chat
-python run.py "Describe box breathing" --context sleep --energy very_gentle
-```
+---
+
+### Two brains, one answer
+
+One agent finds the facts from research papers. A second agent rewrites them in the app's voice. If nothing relevant is found, the system stops — it won't make something up.
+
+![Breath Bot architecture — dual LLM pipeline, knowledge base, and agent orchestration](images/Architecture.png)
+
+| Step | What happens |
+|------|--------------|
+| **1. Research lookup** | Searches peer-reviewed PDFs for relevant breathing information |
+| **2. Fact check** | If nothing is found, returns "I don't know" |
+| **3. Style pass** | Retrieves brand voice examples and rewrites in a calm, approachable tone |
+| **4. App-ready output** | Summary · Benefits · Method — ready for JustBreatheBro |
+
+---
+
+### Every response follows a format
+
+All generated content matches three golden example formats — so every exercise feels consistent across the app.
+
+![Golden example format standards — Summary, Benefits, Method](images/GoldenExamples.png)
+
+| Section | What it looks like |
+|---------|-------------------|
+| **Summary** | 2–4 warm sentences explaining the exercise in plain language |
+| **Benefits** | A concise list — stress relief first, then physical, then mental |
+| **Method** | 3–5 gentle step-by-step instructions using simple active verbs |
+
+---
+
+### Adapt the tone to the moment
+
+The same breathing exercise can sound different depending on when someone needs it — bedtime vs. pre-work vs. an anxiety moment — without losing the app's voice.
+
+![System rules and fine-tuning variables — audience, length, energy, context](images/FineTuning.png)
+
+| Dimension | What it controls |
+|-----------|-----------------|
+| **Audience** | Beginner-friendly vs. more detailed for experienced users |
+| **Length** | Short summary vs. full explanation |
+| **Energy** | Very gentle and soft vs. slightly more uplifting |
+| **Context** | Framed for sleep, mid-day reset, pre-work, anxiety, or general use |
+
+Hard rules always apply: only use retrieved facts, warm tone, no medical claims.
+
+---
+
+### Where the knowledge comes from
+
+**Research papers** — 7 peer-reviewed PDFs on breathing techniques (diaphragmatic breathing, pain management, psychology research, and more). This is the only source of facts.
+
+**Style guides** — 4 example files that teach the system how JustBreatheBro should sound: short descriptions, full descriptions, benefits, and methods. Update the voice by adding new examples — no code changes needed.
 
 ---
 
@@ -67,9 +122,15 @@ python ingest_exercises.py   # PDFs → papers/
 python ingest_style.py       # voice examples → style/
 ```
 
-### Tone control
+Run:
 
-Four CLI flags shape every response without changing the architecture:
+```bash
+python run.py "How do I do 4-7-8 breathing?"
+python run.py --chat
+python run.py "Describe box breathing" --context sleep --energy very_gentle
+```
+
+### Tone control flags
 
 | Flag | Options |
 |------|---------|
@@ -78,13 +139,11 @@ Four CLI flags shape every response without changing the architecture:
 | `--energy` | `very_gentle` · `neutral` · `slightly_uplifting` |
 | `--context` | `sleep` · `mid-day_reset` · `pre-work` · `anxiety_spike` · `general` |
 
-![System rules and fine-tuning variables — audience, length, energy, context](images/FineTuning.png)
-
-*Left: hard rules (source-only facts, warm tone, safety). Right: the four variables injected into the language agent prompt.*
-
 ---
 
-## What was built
+## Technical reference
+
+### What was built
 
 | Layer | Files | Purpose |
 |-------|-------|---------|
@@ -97,24 +156,12 @@ Four CLI flags shape every response without changing the architecture:
 | **Tools** | `tools/retrieval_tool.py` | smolagents tools for document + style search |
 | **Report** | `REPORT.html` | Full system write-up (architecture, evaluation, PEAS) |
 
----
+### Data pipeline
 
-## Data sources
+**Content corpus** — `papers/` → ChromaDB collection `breathing_exercises`  
+PDF → PyPDF extraction → 500-char chunks (100 overlap) → local embeddings → vector store
 
-### Content corpus — `papers/` (7 research PDFs)
-
-Scientific literature on breathing techniques, ingested into ChromaDB collection `breathing_exercises`:
-
-- Diaphragmatic & deep breathing studies
-- Pain self-management research
-- Frontiers in Psychology breathing research
-- Additional peer-reviewed PDFs on breathwork
-
-**Pipeline:** PDF → PyPDF extraction → 500-char chunks (100 overlap) → local embeddings → vector store
-
-### Style corpus — `style/` (4 voice guides)
-
-Brand voice examples ingested into collection `breath_style_guides`:
+**Style corpus** — `style/` → ChromaDB collection `breath_style_guides`
 
 | File | Content type |
 |------|--------------|
@@ -123,35 +170,7 @@ Brand voice examples ingested into collection `breath_style_guides`:
 | `benefit.txt` | Benefit lists |
 | `method.txt` | Step-by-step instructions |
 
-Update voice by adding `.txt` files — no prompt rewrites required.
-
-### Output format standards
-
-Every response follows three golden example formats retrieved from the style corpus:
-
-![Golden example format standards — Summary, Benefits, Method](images/GoldenExamples.png)
-
-| Section | Rules |
-|---------|-------|
-| **Summary** | 2–4 sentences · warm & clear · simple physiology terms |
-| **Benefits** | One sentence, list-style · stress → physical → cognitive order |
-| **Method** | 3–5 sentences · step-by-step · gentle active verbs |
-
----
-
-## Architecture
-
-Two specialized LLMs with separate responsibilities — formal retrieval vs. natural language styling:
-
-![Breath Bot architecture — dual LLM pipeline, knowledge base, and agent orchestration](images/Architecture.png)
-
-| Component | Role |
-|-----------|------|
-| **Knowledge Base** | Academic PDFs chunked and embedded in ChromaDB |
-| **Formal LLM** | Retrieves raw data, applies system rules, returns structured JSON |
-| **Natural Language LLM** | Applies style, fine-tune variables, and golden examples |
-| **Agent** | Orchestrates the flow between user, retrieval, and styling |
-| **Breath App output** | Summary · Benefits · Method — production-ready sections |
+### Architecture
 
 **Key design choices:**
 - **Dual RAG** — content (`breathing_exercises`) and style (`breath_style_guides`) in separate collections
@@ -159,9 +178,21 @@ Two specialized LLMs with separate responsibilities — formal retrieval vs. nat
 - **Early return** — `NO_RELEVANT_INFORMATION` sentinel stops the pipeline before styling
 - **Local embeddings** — `sentence-transformers/all-MiniLM-L6-v2`, zero embedding API cost
 
----
+### Agent pipeline
 
-## Technical stack
+| Step | Agent | Tool | Output |
+|------|-------|------|--------|
+| 1 | Retrieval Agent | `retrieve_documents` | Structured facts from PDFs (top-k=4) |
+| 2 | Guard check | — | Stop if no relevant content found |
+| 3 | Language Agent | `retrieve_style` | On-brand copy using style examples (top-k=4) |
+
+**Safety built in:**
+- Facts must come from ingested PDFs only
+- Hedged wellness language ("may help", "can support")
+- No medical claims or invented techniques
+- Explicit uncertainty when knowledge base has no match
+
+### Tech stack
 
 | Category | Technology | Role |
 |----------|------------|------|
@@ -176,32 +207,12 @@ Two specialized LLMs with separate responsibilities — formal retrieval vs. nat
 | **Config** | python-dotenv | API key management via `.env` |
 | **Interface** | argparse CLI | Single query + interactive chat |
 
-### Python dependencies
-
 ```
 smolagents · chromadb · sentence-transformers · langchain-text-splitters
 python-dotenv · beautifulsoup4 · requests · pypdf
 ```
 
----
-
-## Agent pipeline
-
-| Step | Agent | Tool | Output |
-|------|-------|------|--------|
-| 1 | Retrieval Agent | `retrieve_documents` | Structured facts from PDFs (top-k=4) |
-| 2 | Guard check | — | Stop if no relevant content found |
-| 3 | Language Agent | `retrieve_style` | On-brand copy using style examples (top-k=4) |
-
-**Safety built in:**
-- Facts must come from ingested PDFs only
-- Hedged wellness language ("may help", "can support")
-- No medical claims or invented techniques
-- Explicit uncertainty when knowledge base has no match
-
----
-
-## Project evolution
+### Project evolution
 
 | Phase | Focus |
 |-------|-------|
@@ -209,9 +220,7 @@ python-dotenv · beautifulsoup4 · requests · pypdf
 | **Week 3** | Style RAG corpus, dual retrieval, tone parameters |
 | **Week 4** | Two-LLM architecture — retrieval vs. language separation |
 
----
-
-## Key concepts demonstrated
+### Key concepts demonstrated
 
 - Retrieval-Augmented Generation (RAG)
 - Multi-agent orchestration
@@ -221,9 +230,7 @@ python-dotenv · beautifulsoup4 · requests · pypdf
 - Prompt and context engineering
 - PDF ingestion and embedding pipelines
 
----
-
-## Documentation
+### Documentation
 
 | Resource | Description |
 |----------|-------------|
